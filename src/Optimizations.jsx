@@ -1,6 +1,9 @@
+const space = "--space--";
+const pix = "--pix--";
+
 const removeWhiteSpace = (code) => {
 	const tmpCode = code.replaceAll(/\s+/g, "");
-	return tmpCode.replaceAll("--space--", " ");
+	return tmpCode.replaceAll(space, " ");
 };
 
 const removeLastSemicolon = (code) => {
@@ -12,7 +15,8 @@ const removeLastParanthesis = (code) => {
 };
 
 const removePixelUnit = (code) => {
-	return code.replaceAll("px", "");
+	const tempCode = code.replaceAll("px", "");
+	return tempCode.replaceAll(pix, "px");
 };
 
 const replaceAbsolute = (code) => {
@@ -61,7 +65,7 @@ const replaceNthChild = (code) => {
 				if (count === tag.index) {
 					linesToReplace.push({
 						index: i,
-						newLine: `<${tag.tag}--space--${tag.id}>`,
+						newLine: `<${tag.tag}${space}${tag.id}>`,
 					});
 				}
 			}
@@ -96,7 +100,7 @@ const replaceClasses = (code) => {
 
 		if (line.trim().startsWith("<") && line.includes("class")) {
 			const tag = line.split("<")[1].split("class")[0].trim();
-			const className = (line.match(/["']([^\"]+)["']/g) || [""])[0]
+			const className = (line.match(/["']([^"]+)["']/g) || [""])[0]
 				.replaceAll('"', "")
 				.replaceAll("'", "");
 			let id = makeId(2);
@@ -109,7 +113,7 @@ const replaceClasses = (code) => {
 				className: className,
 				id: id,
 			});
-			line = `<${tag}--space--${id}>`;
+			line = `<${tag}${space}${id}>`;
 		}
 		newLines.push(line);
 	}
@@ -122,7 +126,6 @@ const replaceClasses = (code) => {
 			const line = newLines[i];
 			if (line.trim().startsWith(".") && line.endsWith("{")) {
 				let className = line.split("{")[0].trim().substring(1);
-				let selector = "";
 
 				if (className.includes(":")) {
 					let selector = className.split(":")[0];
@@ -170,11 +173,63 @@ const replaceDivTags = (code) => {
 	return code.replaceAll("div", "p");
 };
 
+const setupShortcutProps = (code) => {
+	const lines = code.split("\n");
+	let newCode = "";
+	const props = [
+		"box-shadow",
+		"border-radius",
+		"border-left",
+		"border-right",
+		"border-top",
+		"border-bottom",
+		"border",
+		"inset",
+	];
+	for (let i = 0; i < lines.length; i++) {
+		let line = lines[i];
+		for (let j = 0; j < props.length; j++) {
+			const property = props[j];
+			if (line.includes(property)) {
+				const prop = line.trim().split(":")[0];
+				let value = line.trim().split(":")[1].trim();
+				value = value.replaceAll(" ", "+");
+				value = value.replaceAll("+#", "#");
+				value = value.replaceAll("px", pix);
+				line = `${prop}: ${value}`;
+			}
+		}
+		newCode += line + "\n";
+	}
+	return newCode;
+};
+
+function splitIt(text, splitter) {
+	const split = text.split(splitter);
+	return [split[0], split[1]];
+}
+
+const setupCalc = (code) => {
+	const lines = code.split("\n");
+	let newCode = "";
+	for (let i = 0; i < lines.length; i++) {
+		let line = lines[i];
+		if (line.includes("calc(")) {
+			const [left, right] = splitIt(line, ":");
+			let n = right.trim().replaceAll(" ", space);
+			n = n.replaceAll("px", pix);
+			line = `${left}: ${n}`;
+		}
+		newCode += line + "\n";
+	}
+	return newCode;
+};
+
 function makeId(length) {
 	var result = "";
 	var characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 	var charactersLength = characters.length;
-	for (var i = 0; i < length; i++) {
+	for (let i = 0; i < length; i++) {
 		result += characters.charAt(Math.floor(Math.random() * charactersLength));
 	}
 	return result;
@@ -185,9 +240,11 @@ export {
 	removeLastSemicolon,
 	removeLastParanthesis,
 	removePixelUnit,
+	removeClosingTags,
 	replaceAbsolute,
 	replaceNthChild,
-	removeClosingTags,
 	replaceDivTags,
 	replaceClasses,
+	setupShortcutProps,
+	setupCalc,
 };
