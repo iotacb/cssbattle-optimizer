@@ -1,11 +1,12 @@
 @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@500;700&display=swap");
 
 :root {
-	--bg: #222;
-	--bg-light: #444;
+	--bg: #250e25;
+	--bg-light: #331c32;
 	--text: white;
 	--accent: #6ba91f;
 	--accent-l: #a4e751;
+	--highlight: #57694e;
 }
 
 *::selection {
@@ -55,4 +56,15 @@ body {
 	-moz-osx-font-smoothing: grayscale;
 
 	list-style-type: none;
+	overflow-x: hidden;
+}
+
+canvas {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	width: 100vw;
+	height: 100vh;
+	z-index: -1000;
 }

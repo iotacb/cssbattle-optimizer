@@ -1,13 +1,14 @@
 const space = "--space--";
 const pix = "--pix--";
 
+let usedIds = [];
+
 const removeWhiteSpace = (code) => {
-	const tmpCode = code.replaceAll(/\s+/g, "");
-	return tmpCode.replaceAll(space, " ");
+	return code.replaceAll(/\s+/g, "");
 };
 
 const removeLastSemicolon = (code) => {
-	return code.replaceAll(";}", "}");
+	return code.replaceAll(/;+(\s+)?}/gm, "\n}");
 };
 
 const removeLastParanthesis = (code) => {
@@ -21,6 +22,54 @@ const removePixelUnit = (code) => {
 
 const replaceAbsolute = (code) => {
 	return code.replaceAll("absolute", "fixed");
+};
+
+const compressColors = (code) => {
+	let tmpCode = code;
+	let newCode = "";
+	let lines = tmpCode.split("\n");
+	for (let i = 0; i < lines.length; i++) {
+		let line = lines[i];
+		if (line.includes("rgb")) {
+			let rgbCode = line.match(
+				/rgb\((\s+)?\d+(,|\s)(\s+)?\d+(\s+)?(,|\s+)(\s+)?\d+(\s+)?\)/g
+			);
+			if (rgbCode != null) {
+				// console.log(rgbCode);
+				rgbCode = rgbCode[0].substring(4).slice(0, -1).replaceAll(/\s+/g, "");
+				const rgbValues = rgbCode.includes(",")
+					? rgbCode.split(",")
+					: rgbCode.split(" ");
+				console.log(rgbValues);
+
+				const hex = rgbToHex(
+					parseInt(rgbValues[0]),
+					parseInt(rgbValues[1]),
+					parseInt(rgbValues[2])
+				);
+
+				let tmpLine = line.split(":")[0];
+				line = `${tmpLine}:${hex};`;
+			}
+		}
+		newCode += line + "\n";
+	}
+	tmpCode = newCode;
+	// Compresses hexadecimal colors
+	// e. g. "FFFFFF" will be compressed to "FFF"
+	tmpCode = tmpCode.replaceAll(/([A-Za-z0-9])\1{5}/g, "$1$1$1");
+
+	return tmpCode;
+};
+
+const compressFontWeights = (code) => {
+	let tmpCode = code;
+	tmpCode = tmpCode.replaceAll(/font-weight:(\s+)?bold/g, "font-weight: 700");
+	tmpCode = tmpCode.replaceAll(
+		/font-weight:(\s+)?normal/g,
+		"font-weight: normal"
+	);
+	return tmpCode;
 };
 
 const replaceNthChild = (code) => {
@@ -92,76 +141,53 @@ const replaceClasses = (code) => {
 	const lines = code.split("\n");
 	code = "";
 	const newLines = [];
-	const usedIds = [];
-	const tags = [];
+	const newClasses = [];
 
 	for (let i = 0; i < lines.length; i++) {
-		let line = lines[i];
-
-		if (line.trim().startsWith("<") && line.includes("class")) {
-			const tag = line.split("<")[1].split("class")[0].trim();
-			const className = (line.match(/["']([^"]+)["']/g) || [""])[0]
+		let line = lines[i].trim();
+		if (line.includes("<") && line.includes(">") && line.includes("class=")) {
+			const tag = line
+				.match(/<\w+\s/g)[0]
+				.substring(1)
+				.trim();
+			const classes = line
+				.match(/class=".+"/)[0]
+				.split("=")[1]
+				.replaceAll("'", "")
 				.replaceAll('"', "")
-				.replaceAll("'", "");
-			let id = makeId(2);
-			while (usedIds.includes(id)) {
-				id = makeId(2);
+				.split(" ");
+			const newCls = [];
+			for (const c in classes) {
+				const cl = classes[c];
+				let id = makeId(2);
+				while (usedIds.includes(id)) {
+					id = makeId(2);
+				}
+				usedIds.push(id);
+				newCls.push(id);
+				newClasses.push({
+					tag: tag,
+					className: cl,
+					id: id,
+				});
 			}
-			usedIds.push(id);
-			tags.push({
-				tag: tag,
-				className: className,
-				id: id,
-			});
-			line = `<${tag}${space}${id}>`;
+			const classString = newCls.join(space);
+			line = `<${tag}${space}${classString}>`;
 		}
 		newLines.push(line);
 	}
-
-	const linesToReplace = [];
-
-	for (let t = 0; t < tags.length; t++) {
-		const tag = tags[t];
-		for (let i = 0; i < newLines.length; i++) {
-			const line = newLines[i];
-			if (line.trim().startsWith(".") && line.endsWith("{")) {
-				let className = line.split("{")[0].trim().substring(1);
-
-				if (className.includes(":")) {
-					let selector = className.split(":")[0];
-					selector = className.split(selector)[1];
-
-					if (className.includes(tag.className)) {
-						linesToReplace.push({
-							index: i,
-							newLine: `${tag.tag}[${tag.id}]${selector} {`,
-						});
-					}
-				} else {
-					if (className.includes(tag.className)) {
-						linesToReplace.push({
-							index: i,
-							newLine: `${tag.tag}[${tag.id}] {`,
-						});
-					}
+	for (let i = 0; i < newLines.length; i++) {
+		let line = newLines[i].trim();
+		if (line.includes(".") && line.endsWith("{")) {
+			for (let c = 0; c < newClasses.length; c++) {
+				const cl = newClasses[c];
+				if (line.includes(cl.className)) {
+					line = `${cl.tag}[${cl.id}]${space}{`;
 				}
 			}
 		}
-	}
-
-	for (let i = 0; i < newLines.length; i++) {
-		let line = newLines[i];
-		for (let j = 0; j < linesToReplace.length; j++) {
-			let newLine = linesToReplace[j];
-
-			if (i === newLine.index) {
-				line = newLine.newLine;
-			}
-		}
-
 		code += line + "\n";
 	}
-
 	return code;
 };
 
@@ -225,6 +251,12 @@ const setupCalc = (code) => {
 	return newCode;
 };
 
+function cleanupCode(code) {
+	usedIds = [];
+	const tmpCode = code.replaceAll(space, " ");
+	return tmpCode.replaceAll(pix, "px");
+}
+
 function makeId(length) {
 	var result = "";
 	var characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
@@ -233,6 +265,10 @@ function makeId(length) {
 		result += characters.charAt(Math.floor(Math.random() * charactersLength));
 	}
 	return result;
+}
+
+function rgbToHex(r, g, b) {
+	return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
 }
 
 export {
@@ -247,4 +283,7 @@ export {
 	replaceClasses,
 	setupShortcutProps,
 	setupCalc,
+	cleanupCode,
+	compressColors,
+	compressFontWeights,
 };

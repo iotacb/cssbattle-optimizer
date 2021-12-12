@@ -2,10 +2,25 @@ import React, { useReducer } from "react";
 
 import styled, { keyframes } from "styled-components";
 import CodeInputs from "../components/CodeInputs";
+import Settings from "../components/Settings";
 
 export const ACTIONS = {
 	SHOW: "show",
 	HIDE: "hide",
+};
+
+export const SETTINGS = {
+	REPLACE_ABSOLUTE: "absolute",
+	REMOVE_PIX: "pix",
+	REMOVE_LAST_SEMI: "semi",
+	MINIFY: "minify",
+	REMOVE_CLOSING_TAGS: "closing",
+	REPLACE_DIV_TAGS: "div",
+	REMOVE_LAST_PARANTHESIS: "paranthesis",
+	REPLACE_NTH_CHILD: "nth_child",
+	REPLACE_CLASSES: "classes",
+	COMPRESS_COLORS: "compress_colors",
+	COMPRESS_FONT_WEIGHTS: "compress_font_weights",
 };
 
 function reducer(state, action) {
@@ -21,6 +36,28 @@ function reducer(state, action) {
 
 function changeSettings(state, action) {
 	switch (action.type) {
+		case SETTINGS.REPLACE_ABSOLUTE:
+			return { ...state, replaceAbsolute: action.payload.boolean };
+		case SETTINGS.REMOVE_PIX:
+			return { ...state, removePix: action.payload.boolean };
+		case SETTINGS.REMOVE_LAST_SEMI:
+			return { ...state, removeLastSemi: action.payload.boolean };
+		case SETTINGS.MINIFY:
+			return { ...state, minify: action.payload.boolean };
+		case SETTINGS.REMOVE_CLOSING_TAGS:
+			return { ...state, removeClosingTags: action.payload.boolean };
+		case SETTINGS.REPLACE_DIV_TAGS:
+			return { ...state, replaceDivTags: action.payload.boolean };
+		case SETTINGS.REMOVE_LAST_PARANTHESIS:
+			return { ...state, removeLastParanthesis: action.payload.boolean };
+		case SETTINGS.REPLACE_NTH_CHILD:
+			return { ...state, replaceNthChild: action.payload.boolean };
+		case SETTINGS.REPLACE_CLASSES:
+			return { ...state, replaceClasses: action.payload.boolean };
+		case SETTINGS.COMPRESS_COLORS:
+			return { ...state, compressColors: action.payload.boolean };
+		case SETTINGS.COMPRESS_FONT_WEIGHTS:
+			return { ...state, compressFontWeights: action.payload.boolean };
 		default:
 			return state;
 	}
@@ -33,20 +70,44 @@ function Home() {
 	});
 
 	const [settings, dispatch2] = useReducer(changeSettings, {
-		visible: false,
-		payload: { title: "", text: "" },
+		replaceAbsolute: false,
+		removePix: true,
+		removeLastSemi: true,
+		minify: true,
+		removeClosingTags: true,
+		replaceDivTags: true,
+		removeLastParanthesis: true,
+		replaceNthChild: true,
+		replaceClasses: true,
+		compressColors: true,
+		compressFontWeights: true,
+		payload: { boolean: false },
 	});
 	return (
 		<MainContainer>
-			<h1>Optimizer</h1>
-			<CodeInputs dispatch={dispatch} />
+			{/* <h1>Optimizer</h1> */}
+			<CodeInputs dispatch={dispatch} settings={settings} minCodeWidth={300} />
 			<ShowModal
 				state={state}
 				onClick={() => dispatch({ type: ACTIONS.HIDE })}
 			/>
-			<SettingsContainer>
-				<h2>Settings coming soon.</h2>
-			</SettingsContainer>
+			<Settings dispatch={dispatch2} settings={settings} />
+
+			<FooterContainer>
+				<Spinner>
+					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160">
+						<path
+							id="textcircle"
+							d="M80 15.7c19.4 0 36.8 8.6 48.6 22.2 9.8 11.3 15.7 26 15.7 42.1 0 18.3-7.6 34.8-19.8 46.5-11.5 11-27.2 17.8-44.4 17.8-19.6 0-37.2-8.8-49-22.6-9.6-11.2-15.4-25.8-15.4-41.7 0-14.4 4.8-27.8 12.8-38.5C40.2 25.8 58.9 15.7 80 15.7m0-1c-20.8 0-39.8 9.5-52.3 26.2-8.5 11.4-13 24.9-13 39.1 0 15.5 5.5 30.5 15.6 42.3 12.4 14.6 30.6 23 49.7 23 16.9 0 32.9-6.4 45.1-18.1 13-12.4 20.2-29.2 20.2-47.2 0-15.7-5.6-30.9-15.9-42.7C117 22.9 99 14.7 80 14.7z"
+						></path>
+						<text>
+							<textPath xlinkHref="#textcircle">
+								<tspan>Made with love - 2021 💚 Made with love - 2021 💚</tspan>
+							</textPath>
+						</text>
+					</svg>
+				</Spinner>
+			</FooterContainer>
 		</MainContainer>
 	);
 }
@@ -66,6 +127,47 @@ function ShowModal(props) {
 	);
 }
 
+const Spin = keyframes`
+	from {
+		transform: rotateZ(0deg);
+	}
+	to {
+		transform: rotateZ(360deg);
+	}
+`;
+
+const Spinner = styled.div`
+	user-select: none;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+
+	margin: 20px;
+
+	min-width: 100px;
+	min-height: 100px;
+	max-width: 100px;
+	max-height: 100px;
+
+	transform-origin: center center;
+	animation: ${Spin} 20s infinite linear;
+	svg {
+		width: 100%;
+
+		path {
+			fill: none;
+		}
+
+		text {
+			fill: var(--text);
+		}
+	}
+`;
+
+const FooterContainer = styled.div`
+	width: 100%;
+`;
+
 const Wobble = keyframes`
 	0%, 100% {
 		transform: rotate(0deg) scale(1);
@@ -83,15 +185,12 @@ const MainContainer = styled.main`
 	align-items: center;
 	flex-direction: column;
 
-	gap: 2rem;
-
-	padding: 2rem 4rem;
+	padding: 2rem;
 
 	h1:first-of-type {
-		align-self: flex-start;
 		font-weight: bold;
 		font-size: 2.5rem;
-		margin: 1rem 0;
+		margin: 2rem 0;
 		position: relative;
 		text-shadow: 2px 2px 5px rgba(0 0 0 / 0.25);
 		user-select: none;
@@ -144,7 +243,6 @@ const Modal = styled.div`
 	width: 400px;
 	height: 240px;
 	background: var(--bg);
-	border-radius: 14px;
 	display: flex;
 	justify-content: center;
 	align-items: center;
@@ -169,7 +267,6 @@ const Button = styled.a`
 	user-select: none;
 	background: var(--bg-light);
 	padding: 1rem 2rem;
-	border-radius: 5px;
 	cursor: pointer;
 	position: relative;
 	transition: background 0.25s ease;
@@ -179,13 +276,4 @@ const Button = styled.a`
 		background: var(--accent-l);
 		text-shadow: 2px 2px 5px rgba(0 0 0 / 0.5);
 	}
-`;
-
-const SettingsContainer = styled.div`
-	width: 100%;
-	height: 100px;
-	background-color: rgb(30 30 30);
-	display: flex;
-	justify-content: center;
-	align-items: center;
 `;

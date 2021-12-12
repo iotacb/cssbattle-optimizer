@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 
 import styled from "styled-components";
 
@@ -11,45 +11,119 @@ import { ACTIONS } from "../pages/Home";
 
 import * as opt from "../Optimizations";
 
+import Draggable from "react-draggable";
+
 function CodeInputs(props) {
-	const { dispatch } = props;
+	const { dispatch, settings, minCodeWidth } = props;
 	const [codeString, setCodeString] = useState("");
 	const [unoptimizedCode, setUnoptimizedCode] = useState("");
+	const [charLengthDefault, setCharLengthDefault] = useState(0);
+	const [charLengthFormatted, setCharLengthFormatted] = useState(0);
+
+	const defaultCodeRef = useRef();
+	const styledCodeRef = useRef();
+
+	const clamp = (num, min, max) => Math.min(Math.max(num, min), max);
+
 	const optimize = () => {
-		let tempCode = unoptimizedCode;
+		let tempCode = unoptimizedCode.trim();
 
 		tempCode = opt.setupShortcutProps(tempCode);
 		tempCode = opt.setupCalc(tempCode);
-		tempCode = opt.replaceNthChild(tempCode);
-		tempCode = opt.removeClosingTags(tempCode);
-		tempCode = opt.replaceDivTags(tempCode);
-		tempCode = opt.replaceClasses(tempCode);
-		// tempCode = opt.replaceAbsolute(tempCode);
-		tempCode = opt.removeWhiteSpace(tempCode);
-		tempCode = opt.removeLastSemicolon(tempCode);
-		tempCode = opt.removeLastParanthesis(tempCode);
-		tempCode = opt.removePixelUnit(tempCode);
+
+		if (settings.compressColors) {
+			tempCode = opt.compressColors(tempCode);
+		}
+		if (settings.compressFontWeights) {
+			tempCode = opt.compressFontWeights(tempCode);
+		}
+		if (settings.replaceNthChild) {
+			tempCode = opt.replaceNthChild(tempCode);
+		}
+		if (settings.removeClosingTags) {
+			tempCode = opt.removeClosingTags(tempCode);
+		}
+		if (settings.replaceDivTags) {
+			tempCode = opt.replaceDivTags(tempCode);
+		}
+		if (settings.replaceClasses) {
+			tempCode = opt.replaceClasses(tempCode);
+		}
+		if (settings.replaceAbsolute) {
+			tempCode = opt.replaceAbsolute(tempCode);
+		}
+		if (settings.removeLastSemi) {
+			tempCode = opt.removeLastSemicolon(tempCode);
+		}
+		if (settings.removeLastParanthesis) {
+			tempCode = opt.removeLastParanthesis(tempCode);
+		}
+		if (settings.removePix) {
+			tempCode = opt.removePixelUnit(tempCode);
+		}
+		if (settings.minify) {
+			tempCode = opt.removeWhiteSpace(tempCode);
+		}
+
+		tempCode = opt.cleanupCode(tempCode);
 
 		setCodeString(tempCode);
+		setCharLengthFormatted(tempCode.length);
 
 		dispatch({
 			type: ACTIONS.SHOW,
-			payload: { title: "Success!", text: "Your css has been optimized." },
+			payload: {
+				title: "Success!",
+				text: `Your css has been optimized. You saved ${
+					charLengthDefault - charLengthFormatted
+				} characters!`,
+			},
 		});
 	};
 
+	const resizeCodeInputs = (e) => {
+		const mouseX = e.x;
+		const vw = Math.max(
+			document.documentElement.clientWidth || 0,
+			window.innerWidth || 0
+		);
+
+		let dWidth = clamp(mouseX, minCodeWidth, vw - minCodeWidth);
+		let sWidth = clamp(vw - mouseX, minCodeWidth, vw - minCodeWidth);
+
+		defaultCodeRef.current.style.width = `${
+			dWidth - defaultCodeRef.current.getBoundingClientRect().left
+		}px`;
+		styledCodeRef.current.style.width = `${
+			sWidth - (vw - styledCodeRef.current.getBoundingClientRect().right)
+		}px`;
+	};
+
+	useEffect(() => {
+		const vw = Math.max(
+			document.documentElement.clientWidth || 0,
+			window.innerWidth || 0
+		);
+
+		defaultCodeRef.current.style.width = `${vw / 2}px`;
+		styledCodeRef.current.style.width = `${vw / 2}px`;
+	}, []);
+
 	return (
 		<Container>
-			<InputContainer>
-				<h2>Input:</h2>
+			<InputContainer ref={defaultCodeRef}>
+				{charLengthDefault > 0 && <p>{charLengthDefault}</p>}
 				<DefaultInput
-					onChange={(e) => setUnoptimizedCode(e.target.value)}
-					placeholder="Put your css here"
+					setCode={setUnoptimizedCode}
+					setLength={setCharLengthDefault}
 				/>
 				<Button onClick={optimize}>Optimize</Button>
 			</InputContainer>
-			<InputContainer>
-				<h2>Output:</h2>
+			<Draggable axis="x" onDrag={resizeCodeInputs}>
+				<Drag />
+			</Draggable>
+			<InputContainer ref={styledCodeRef}>
+				{charLengthFormatted > 0 && <p>{charLengthFormatted}</p>}
 				<SyntaxInput code={codeString} />
 				<CopyToClipboard text={codeString}>
 					<Button
@@ -80,14 +154,52 @@ function SyntaxInput(props) {
 	);
 }
 
+function DefaultInput(props) {
+	const { setCode, setLength } = props;
+	return (
+		<DefaultInputStyle
+			onChange={(e) => {
+				setCode(e.target.value);
+				setLength(e.target.value.length);
+			}}
+			placeholder="Put your css here"
+		/>
+	);
+}
+
 export default CodeInputs;
+
+const Drag = styled.div`
+	width: 10px;
+	height: 100%;
+	position: relative;
+	cursor: col-resize;
+	transform: none !important;
+
+	&:hover {
+		&::before {
+			height: 25%;
+		}
+	}
+
+	&::before {
+		content: "";
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		width: 2px;
+		height: 20%;
+		transform: translate(-50%, -50%);
+		background: var(--highlight);
+		transition: height 0.25s cubic-bezier(1, -0.6, 0, 1.65);
+	}
+`;
 
 const Container = styled.div`
 	display: flex;
 	justify-content: space-between;
-	gap: 2rem;
 	width: 100%;
-	height: 80vh;
+	height: 100vh;
 
 	h2 {
 		user-select: none;
@@ -97,38 +209,46 @@ const Container = styled.div`
 const InputContainer = styled.div`
 	display: flex;
 	flex-direction: column;
-	gap: 1rem;
 	width: 100%;
 	height: 100%;
+	position: relative;
+	gap: 5px;
+
+	h2 {
+		margin: 0;
+	}
+
+	p {
+		position: absolute;
+		right: 1rem;
+		opacity: 1;
+		z-index: 1;
+		text-align: right;
+		background: var(--accent);
+		border-radius: 5px;
+		padding: 0.25rem;
+	}
 `;
 
-const DefaultInput = styled.textarea`
-	background: rgb(30, 30, 30);
+const DefaultInputStyle = styled.textarea`
+	background: var(--bg-light);
 	color: var(--text);
 	resize: none;
 	margin: 0;
 	height: 100%;
-	flex-grow: 0;
 	padding: 0.5rem;
 	border: none;
 	position: relative;
-
-	&:hover,
-	&:focus-within {
-		outline: none;
-	}
-
-	&:focus-within {
-		box-shadow: 0 0 2rem -0.5rem var(--accent-l);
-	}
+	outline: none;
+	transition: background 0.3s ease;
 `;
 
 const SyntaxHighlighterInput = styled(SyntaxHighlighter)`
 	margin: 0 !important;
-	padding: 0 !important;
+	padding: 0.5rem !important;
 	min-height: 36px;
-	width: 100%;
 	height: 100%;
+	background: var(--bg-light) !important;
 `;
 
 const Button = styled.a`
@@ -136,8 +256,7 @@ const Button = styled.a`
 	color: var(--text);
 	user-select: none;
 	background: var(--bg-light);
-	padding: 1rem 2rem;
-	border-radius: 5px;
+	padding: 1rem 1rem;
 	cursor: pointer;
 	position: relative;
 	transition: background 0.25s ease;
