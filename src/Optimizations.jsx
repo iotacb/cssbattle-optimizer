@@ -59,6 +59,31 @@ const compressColors = (code) => {
 	// e. g. "FFFFFF" will be compressed to "FFF"
 	tmpCode = tmpCode.replaceAll(/([A-Za-z0-9])\1{5}/g, "$1$1$1");
 
+	// Compresses hexadecimal colors
+	// e. g. "88FFDD" will be compressed to "8FD"
+	// tmpCode = tmpCode.replaceAll(/([A-Za-z0-9])\1{1}/g, "$1");
+
+	newCode = "";
+	lines = tmpCode.split("\n");
+	for (let i = 0; i < lines.length; i++) {
+		let line = lines[i];
+		if (line.includes("color:")) {
+			let c = line.split(":")[1].replaceAll("#", "").replaceAll(";", "");
+			if (c.length >= 6) {
+				let colors = c.match(/([a-zA-Z0-9])\1{1}/g);
+				if (colors != null && colors.length === 3) {
+					let newColor = "";
+					for (let j = 0; j < colors.length; j++) {
+						newColor += colors[j].substring(1);
+					}
+					line = `color:#${newColor};`;
+				}
+			}
+		}
+		newCode += line + "\n";
+	}
+	tmpCode = newCode;
+
 	return tmpCode;
 };
 

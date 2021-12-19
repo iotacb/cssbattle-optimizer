@@ -4,6 +4,8 @@ import styled, { keyframes } from "styled-components";
 import CodeInputs from "../components/CodeInputs";
 import Settings from "../components/Settings";
 
+import { BuyMeBadge } from "buymesomething-react";
+
 export const ACTIONS = {
 	SHOW: "show",
 	HIDE: "hide",
@@ -108,6 +110,19 @@ function Home() {
 					</svg>
 				</Spinner>
 			</FooterContainer>
+			<BuyMeBadge
+				text="Buy me a Pizza!"
+				emoji="🍕"
+				color="var(--accent)"
+				link="https://www.buymeacoffee.com/kostari"
+			/>
+			<BuyMeBadge
+				text="My Portfolio"
+				emoji="🅿️"
+				color="var(--accent)"
+				link="https://chrisbrandt.dev"
+				offset={{ x: 0, y: 100 }}
+			/>
 		</MainContainer>
 	);
 }
