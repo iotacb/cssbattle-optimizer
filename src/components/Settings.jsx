@@ -94,6 +94,22 @@ function Settings(props) {
 				dispatch={dispatch}
 				checked={settings.compressFontWeights}
 			/>
+
+			<Input
+				name="stripComments"
+				type={SETTINGS.STRIP_COMMENTS}
+				text="Strip all comments"
+				dispatch={dispatch}
+				checked={settings.stripComments}
+			/>
+
+			<Input
+				name="replaceNoneWithZero"
+				type={SETTINGS.REPLACE_NONE_WITH_ZERO}
+				text="Replace none with zero where possible"
+				dispatch={dispatch}
+				checked={settings.replaceNoneWithZero}
+			/>
 		</SettingsContainer>
 	);
 }
@@ -109,8 +125,6 @@ const SettingsContainer = styled.div`
 	padding: 2rem;
 
 	input {
-		// @ts-ignore
-		/* jshint ignore:end */
 		accent-color: var(--accent);
 	}
 

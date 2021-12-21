@@ -4,7 +4,7 @@ import styled, { keyframes } from "styled-components";
 import CodeInputs from "../components/CodeInputs";
 import Settings from "../components/Settings";
 
-import { BuyMeBadge } from "buymesomething-react";
+import { SingleBadge } from "react-easy-badges";
 
 export const ACTIONS = {
 	SHOW: "show",
@@ -23,6 +23,9 @@ export const SETTINGS = {
 	REPLACE_CLASSES: "classes",
 	COMPRESS_COLORS: "compress_colors",
 	COMPRESS_FONT_WEIGHTS: "compress_font_weights",
+	STRIP_COMMENTS: "strip_comments",
+	REMOVE_EMPTY_DECLARATIONS: "remove_empty_declarations",
+	REPLACE_NONE_WITH_ZERO: "replace_none_with_zero",
 };
 
 function reducer(state, action) {
@@ -60,6 +63,12 @@ function changeSettings(state, action) {
 			return { ...state, compressColors: action.payload.boolean };
 		case SETTINGS.COMPRESS_FONT_WEIGHTS:
 			return { ...state, compressFontWeights: action.payload.boolean };
+		case SETTINGS.STRIP_COMMENTS:
+			return { ...state, stripComments: action.payload.boolean };
+		case SETTINGS.REMOVE_EMPTY_DECLARATIONS:
+			return { ...state, removeEmptyDeclarations: action.payload.boolean };
+		case SETTINGS.REPLACE_NONE_WITH_ZERO:
+			return { ...state, replaceNoneWithZero: action.payload.boolean };
 		default:
 			return state;
 	}
@@ -83,6 +92,9 @@ function Home() {
 		replaceClasses: true,
 		compressColors: true,
 		compressFontWeights: true,
+		stripComments: true,
+		removeEmptyDeclarations: true,
+		replaceNoneWithZero: true,
 		payload: { boolean: false },
 	});
 	return (
@@ -110,13 +122,13 @@ function Home() {
 					</svg>
 				</Spinner>
 			</FooterContainer>
-			<BuyMeBadge
+			<SingleBadge
 				text="Buy me a Pizza!"
 				emoji="🍕"
 				color="var(--accent)"
 				link="https://www.buymeacoffee.com/kostari"
 			/>
-			<BuyMeBadge
+			<SingleBadge
 				text="My Portfolio"
 				emoji="🅿️"
 				color="var(--accent)"

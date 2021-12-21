@@ -162,6 +162,26 @@ const replaceNthChild = (code) => {
 	return code;
 };
 
+const stripComments = (code) => {
+	let tmpCode = code.replaceAll(/<!--([\s\S]*?)-->/g, "");
+	return tmpCode.replaceAll(/\/\*([\s\S]*?)\*\//g, "");
+};
+
+const removeEmptyDeclarations = (code) => {
+	return code.replaceAll(/\w+(\s+){[\s]*}/g, "");
+};
+
+const replaceNoneWithZero = (code) => {
+	let props = ["border", "outline"];
+	let tmpCode = code;
+	for (let i in props) {
+		const p = props[i];
+		const regex = new RegExp(`${p}:(\\s+)?none`, "g");
+		tmpCode = tmpCode.replaceAll(regex, `${p}:0`);
+	}
+	return tmpCode;
+};
+
 const replaceClasses = (code) => {
 	const lines = code.split("\n");
 	code = "";
@@ -311,4 +331,7 @@ export {
 	cleanupCode,
 	compressColors,
 	compressFontWeights,
+	stripComments,
+	removeEmptyDeclarations,
+	replaceNoneWithZero,
 };

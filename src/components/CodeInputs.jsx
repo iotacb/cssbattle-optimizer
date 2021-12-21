@@ -30,7 +30,15 @@ function CodeInputs(props) {
 
 		tempCode = opt.setupShortcutProps(tempCode);
 		tempCode = opt.setupCalc(tempCode);
-
+		if (settings.replaceNoneWithZero) {
+			tempCode = opt.replaceNoneWithZero(tempCode);
+		}
+		if (settings.stripComments) {
+			tempCode = opt.stripComments(tempCode);
+		}
+		if (settings.removeEmptyDeclarations) {
+			tempCode = opt.removeEmptyDeclarations(tempCode);
+		}
 		if (settings.compressColors) {
 			tempCode = opt.compressColors(tempCode);
 		}
