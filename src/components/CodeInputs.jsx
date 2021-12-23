@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useReducer } from "react";
 
 import styled from "styled-components";
 
@@ -13,12 +13,35 @@ import * as opt from "../Optimizations";
 
 import Draggable from "react-draggable";
 
+function reducer(state, action) {
+	switch (action.type) {
+		case "UPDATE":
+			return {
+				...state,
+				charLengthDefault: action.payload.value1,
+			};
+		case "UPDATE_ALL":
+			return {
+				charLengthDefault: action.payload.value1,
+				charLengthFormatted: action.payload.value2,
+			};
+		default:
+			return state;
+	}
+}
+
 function CodeInputs(props) {
 	const { dispatch, settings, minCodeWidth } = props;
 	const [codeString, setCodeString] = useState("");
 	const [unoptimizedCode, setUnoptimizedCode] = useState("");
-	const [charLengthDefault, setCharLengthDefault] = useState(0);
-	const [charLengthFormatted, setCharLengthFormatted] = useState(0);
+	// const [charLengthDefault, setCharLengthDefault] = useState(0);
+	// const [charLengthFormatted, setCharLengthFormatted] = useState(0);
+
+	const [lengths, dispatchLengths] = useReducer(reducer, {
+		charLengthDefault: 0,
+		charLengthFormatted: 0,
+		payload: { value1: 0, value2: 0 },
+	});
 
 	const defaultCodeRef = useRef();
 	const styledCodeRef = useRef();
@@ -76,14 +99,21 @@ function CodeInputs(props) {
 		tempCode = opt.cleanupCode(tempCode);
 
 		setCodeString(tempCode);
-		setCharLengthFormatted(tempCode.length);
+
+		dispatchLengths({
+			type: "UPDATE_ALL",
+			payload: {
+				value1: unoptimizedCode.length,
+				value2: tempCode.length,
+			},
+		});
 
 		dispatch({
 			type: ACTIONS.SHOW,
 			payload: {
 				title: "Success!",
 				text: `Your css has been optimized. You saved ${
-					charLengthDefault - charLengthFormatted
+					unoptimizedCode.length - tempCode.length
 				} characters!`,
 			},
 		});
@@ -120,10 +150,15 @@ function CodeInputs(props) {
 	return (
 		<Container>
 			<InputContainer ref={defaultCodeRef}>
-				{charLengthDefault > 0 && <p>{charLengthDefault}</p>}
+				{lengths.charLengthDefault > 0 && <p>{lengths.charLengthDefault}</p>}
 				<DefaultInput
 					setCode={setUnoptimizedCode}
-					setLength={setCharLengthDefault}
+					setLength={(e) => {
+						dispatchLengths({
+							type: "UPDATE",
+							payload: { value1: e },
+						});
+					}}
 				/>
 				<Button onClick={optimize}>Optimize</Button>
 			</InputContainer>
@@ -131,7 +166,9 @@ function CodeInputs(props) {
 				<Drag />
 			</Draggable>
 			<InputContainer ref={styledCodeRef}>
-				{charLengthFormatted > 0 && <p>{charLengthFormatted}</p>}
+				{lengths.charLengthFormatted > 0 && (
+					<p>{lengths.charLengthFormatted}</p>
+				)}
 				<SyntaxInput code={codeString} />
 				<CopyToClipboard text={codeString}>
 					<Button

@@ -84,6 +84,28 @@ const compressColors = (code) => {
 	}
 	tmpCode = newCode;
 
+	const colorNames = [
+		{ n: "white", c: "#FFF" },
+		{ n: "red", c: "#F00" },
+		{ n: "green", c: "#0F0" },
+		{ n: "blue", c: "#00F" },
+		{ n: "black", c: "#000" },
+		{ n: "yellow", c: "#FF0" },
+		{ n: "magenta", c: "#F0F" },
+		{ n: "cyan", c: "#0FF" },
+	];
+
+	lines = tmpCode.split("\n");
+	newCode = "";
+	for (let l in lines) {
+		let line = lines[l];
+		for (let i = 0; i < colorNames.length; i++) {
+			line = line.replaceAll(colorNames[i].n, colorNames[i].c);
+		}
+		newCode += line + "\n";
+	}
+	tmpCode = newCode;
+
 	return tmpCode;
 };
 
@@ -108,6 +130,11 @@ const replaceNthChild = (code) => {
 
 	for (let i = 0; i < lines.length; i++) {
 		let line = lines[i];
+
+		if (line.match(/<.*\s.*>/g)) {
+			line = line.replaceAll(" ", space);
+		}
+
 		if (line.includes(split)) {
 			const tag = line.split(split)[0].trim();
 			const index = parseInt(line.split(split)[1].split(")")[0]);
@@ -148,6 +175,7 @@ const replaceNthChild = (code) => {
 
 	for (let i = 0; i < newLines.length; i++) {
 		let line = newLines[i];
+
 		for (let j = 0; j < linesToReplace.length; j++) {
 			let newLine = linesToReplace[j];
 
