@@ -23,7 +23,7 @@ export const SETTINGS = {
 	REPLACE_CLASSES: "classes",
 	COMPRESS_COLORS: "compress_colors",
 	COMPRESS_FONT_WEIGHTS: "compress_font_weights",
-	STRIP_COMMENTS: "strip_comments",
+	REMOVE_COMMENTS: "remove_comments",
 	REMOVE_EMPTY_DECLARATIONS: "remove_empty_declarations",
 	REPLACE_NONE_WITH_ZERO: "replace_none_with_zero",
 };
@@ -63,8 +63,8 @@ function changeSettings(state, action) {
 			return { ...state, compressColors: action.payload.boolean };
 		case SETTINGS.COMPRESS_FONT_WEIGHTS:
 			return { ...state, compressFontWeights: action.payload.boolean };
-		case SETTINGS.STRIP_COMMENTS:
-			return { ...state, stripComments: action.payload.boolean };
+		case SETTINGS.REMOVE_COMMENTS:
+			return { ...state, removeComments: action.payload.boolean };
 		case SETTINGS.REMOVE_EMPTY_DECLARATIONS:
 			return { ...state, removeEmptyDeclarations: action.payload.boolean };
 		case SETTINGS.REPLACE_NONE_WITH_ZERO:
@@ -92,7 +92,7 @@ function Home() {
 		replaceClasses: true,
 		compressColors: true,
 		compressFontWeights: true,
-		stripComments: true,
+		removeComments: true,
 		removeEmptyDeclarations: true,
 		replaceNoneWithZero: true,
 		payload: { boolean: false },
@@ -106,7 +106,6 @@ function Home() {
 				onClick={() => dispatch({ type: ACTIONS.HIDE })}
 			/>
 			<Settings dispatch={dispatch2} settings={settings} />
-
 			<FooterContainer>
 				<Spinner>
 					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160">
@@ -263,6 +262,7 @@ const ModalContainer = styled.div`
 		justify-content: center;
 		align-items: center;
 		pointer-events: ${props.visible ? "all" : "none"};
+		z-index: 10;
 	`}
 `;
 

@@ -96,11 +96,11 @@ function Settings(props) {
 			/>
 
 			<Input
-				name="stripComments"
-				type={SETTINGS.STRIP_COMMENTS}
-				text="Strip all comments"
+				name="removeComments"
+				type={SETTINGS.REMOVE_COMMENTS}
+				text="Remove all comments"
 				dispatch={dispatch}
-				checked={settings.stripComments}
+				checked={settings.removeComments}
 			/>
 
 			<Input
@@ -118,7 +118,7 @@ export default Settings;
 
 const SettingsContainer = styled.div`
 	width: 100%;
-	height: 6rem;
+	height: 8rem;
 	display: flex;
 	flex-wrap: wrap;
 	flex-direction: column;

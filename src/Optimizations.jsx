@@ -35,7 +35,6 @@ const compressColors = (code) => {
 				/rgb\((\s+)?\d+(,|\s)(\s+)?\d+(\s+)?(,|\s+)(\s+)?\d+(\s+)?\)/g
 			);
 			if (rgbCode != null) {
-				// console.log(rgbCode);
 				rgbCode = rgbCode[0].substring(4).slice(0, -1).replaceAll(/\s+/g, "");
 				const rgbValues = rgbCode.includes(",")
 					? rgbCode.split(",")
@@ -55,13 +54,7 @@ const compressColors = (code) => {
 		newCode += line + "\n";
 	}
 	tmpCode = newCode;
-	// Compresses hexadecimal colors
-	// e. g. "FFFFFF" will be compressed to "FFF"
 	tmpCode = tmpCode.replaceAll(/([A-Za-z0-9])\1{5}/g, "$1$1$1");
-
-	// Compresses hexadecimal colors
-	// e. g. "88FFDD" will be compressed to "8FD"
-	// tmpCode = tmpCode.replaceAll(/([A-Za-z0-9])\1{1}/g, "$1");
 
 	newCode = "";
 	lines = tmpCode.split("\n");
@@ -95,28 +88,17 @@ const compressColors = (code) => {
 		{ n: "cyan", c: "#0FF" },
 	];
 
-	lines = tmpCode.split("\n");
-	newCode = "";
-	for (let l in lines) {
-		let line = lines[l];
-		for (let i = 0; i < colorNames.length; i++) {
-			line = line.replaceAll(colorNames[i].n, colorNames[i].c);
-		}
-		newCode += line + "\n";
+	for (let i in colorNames) {
+		const colorName = colorNames[i];
+		tmpCode = tmpCode.replaceAll(colorName.n, colorName.c);
 	}
-	tmpCode = newCode;
 
 	return tmpCode;
 };
 
 const compressFontWeights = (code) => {
-	let tmpCode = code;
-	tmpCode = tmpCode.replaceAll(/font-weight:(\s+)?bold/g, "font-weight: 700");
-	tmpCode = tmpCode.replaceAll(
-		/font-weight:(\s+)?normal/g,
-		"font-weight: normal"
-	);
-	return tmpCode;
+	let tmpCode = code.replaceAll(/font-weight:(\s+)?bold/g, "font-weight: 700");
+	return tmpCode.replaceAll(/font-weight:(\s+)?normal/g, "font-weight: normal");
 };
 
 const replaceNthChild = (code) => {
@@ -190,7 +172,7 @@ const replaceNthChild = (code) => {
 	return code;
 };
 
-const stripComments = (code) => {
+const removeComments = (code) => {
 	let tmpCode = code.replaceAll(/<!--([\s\S]*?)-->/g, "");
 	return tmpCode.replaceAll(/\/\*([\s\S]*?)\*\//g, "");
 };
@@ -201,13 +183,12 @@ const removeEmptyDeclarations = (code) => {
 
 const replaceNoneWithZero = (code) => {
 	let props = ["border", "outline"];
-	let tmpCode = code;
 	for (let i in props) {
 		const p = props[i];
 		const regex = new RegExp(`${p}:(\\s+)?none`, "g");
-		tmpCode = tmpCode.replaceAll(regex, `${p}:0`);
+		code = code.replaceAll(regex, `${p}:0`);
 	}
-	return tmpCode;
+	return code;
 };
 
 const replaceClasses = (code) => {
@@ -303,10 +284,10 @@ const setupShortcutProps = (code) => {
 	return newCode;
 };
 
-function splitIt(text, splitter) {
+const splitIt = (text, splitter) => {
 	const split = text.split(splitter);
 	return [split[0], split[1]];
-}
+};
 
 const setupCalc = (code) => {
 	const lines = code.split("\n");
@@ -324,25 +305,24 @@ const setupCalc = (code) => {
 	return newCode;
 };
 
-function cleanupCode(code) {
+const cleanupCode = (code) => {
 	usedIds = [];
 	const tmpCode = code.replaceAll(space, " ");
 	return tmpCode.replaceAll(pix, "px");
-}
+};
 
-function makeId(length) {
-	var result = "";
-	var characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-	var charactersLength = characters.length;
+const makeId = (length) => {
+	let result = "";
+	const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 	for (let i = 0; i < length; i++) {
-		result += characters.charAt(Math.floor(Math.random() * charactersLength));
+		result += characters.charAt(Math.floor(Math.random() * characters.length));
 	}
 	return result;
-}
+};
 
-function rgbToHex(r, g, b) {
+const rgbToHex = (r, g, b) => {
 	return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
-}
+};
 
 export {
 	removeWhiteSpace,
@@ -359,7 +339,7 @@ export {
 	cleanupCode,
 	compressColors,
 	compressFontWeights,
-	stripComments,
+	removeComments,
 	removeEmptyDeclarations,
 	replaceNoneWithZero,
 };

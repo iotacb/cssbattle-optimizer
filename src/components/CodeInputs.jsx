@@ -34,8 +34,6 @@ function CodeInputs(props) {
 	const { dispatch, settings, minCodeWidth } = props;
 	const [codeString, setCodeString] = useState("");
 	const [unoptimizedCode, setUnoptimizedCode] = useState("");
-	// const [charLengthDefault, setCharLengthDefault] = useState(0);
-	// const [charLengthFormatted, setCharLengthFormatted] = useState(0);
 
 	const [lengths, dispatchLengths] = useReducer(reducer, {
 		charLengthDefault: 0,
@@ -56,8 +54,8 @@ function CodeInputs(props) {
 		if (settings.replaceNoneWithZero) {
 			tempCode = opt.replaceNoneWithZero(tempCode);
 		}
-		if (settings.stripComments) {
-			tempCode = opt.stripComments(tempCode);
+		if (settings.removeComments) {
+			tempCode = opt.removeComments(tempCode);
 		}
 		if (settings.removeEmptyDeclarations) {
 			tempCode = opt.removeEmptyDeclarations(tempCode);
